@@ -26,6 +26,7 @@ from stepfunctions.steps.fields import Field
 from stepfunctions.steps.utils import tags_dict_to_kv_list
 from stepfunctions.steps.integration_resources import IntegrationPattern, get_service_integration_arn
 
+from sagemaker import vpc_utils
 from sagemaker.workflow.airflow import training_config, transform_config, model_config, tuning_config, processing_config
 from sagemaker.model import Model, FrameworkModel
 from sagemaker.model_monitor import DataCaptureConfig
@@ -93,8 +94,7 @@ class SageMakerTask(Task):
             Field.Data,
             Field.VolumeSize,
             Field.MaxRun,
-            Field.Subnets,
-            Field.SecurityGroupIds,
+            Field.VpcConfig,
             Field.ModelUri,
             Field.ModelChannelName,
             Field.MetricDefinitions,
@@ -117,7 +117,6 @@ class SageMakerTask(Task):
             # ModelStep
             Field.ModelData,
             Field.Name,
-            Field.VpcConfig,
             Field.ImageConfig,
 
             # TuningStep: Tuner
@@ -190,7 +189,8 @@ class TrainingStep(SageMakerTask):
     """
 
     def __init__(self, state_id, estimator, job_name, data=None, hyperparameters=None, mini_batch_size=None,
-                 experiment_config=None, wait_for_completion=True, tags=None, output_data_config_path=None, **kwargs):
+                 experiment_config=None, wait_for_completion=True, tags=None, output_data_config_path=None,
+                 vpc_config=None, **kwargs):
         """
         Args:
             state_id (str): State name whose length **must be** less than or equal to 128 unicode characters. State names **must be** unique within the scope of the whole state machine.
@@ -280,7 +280,14 @@ class TrainingStep(SageMakerTask):
         if 'S3Operations' in parameters:
             del parameters['S3Operations']
 
+        if vpc_config is not None:
+            if isinstance(vpc_config, Placeholder):
+                parameters['VpcConfig'] = vpc_config
+            else:
+                parameters['VpcConfig'] = vpc_utils.sanitize(vpc_config)
+
         kwargs[Field.Parameters.value] = parameters
+        print(f"TRAINING STEP: parameters{parameters}")
         super(TrainingStep, self).__init__(state_id, __class__.__name__, tags, **kwargs)
 
     def get_expected_model(self, model_name=None):

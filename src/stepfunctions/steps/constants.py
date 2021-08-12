@@ -26,7 +26,6 @@ placeholder_paths = {
         Field.VolumeKMSKey.value: ['ProcessingResources', 'ClusterConfig', 'VolumeKmsKeyId'],
         Field.Env.value: ['Environment'],
         Field.Tags.value: ['Tags'],
-
     },
     # Paths taken from https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTransformJob.html
     'TransformStep': {
@@ -78,8 +77,6 @@ placeholder_paths = {
         Field.VolumeKMSKey.value: ['ResourceConfig', 'VolumeKmsKeyId'],
         Field.MaxRun.value: ['StoppingCondition', 'MaxRuntimeInSeconds'],
         Field.OutputKMSKey.value: ['OutputDataConfig', 'KmsKeyId'],
-        Field.Subnets.value: ['VpcConfig', 'Subnets'],
-        Field.SecurityGroupIds.value: ['VpcConfig', 'SecurityGroupIds'],
         Field.MetricDefinitions.value: ['AlgorithmSpecification', 'MetricDefinitions'],
         Field.EncryptInterContainerTraffic.value: ['EnableInterContainerTrafficEncryption'],
         Field.UseSpotInstances.value: ['EnableManagedSpotTraining'],

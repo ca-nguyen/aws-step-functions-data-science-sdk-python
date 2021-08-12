@@ -77,8 +77,9 @@ class Field(Enum):
     Data                            = 'data'
     VolumeSize                      = 'volume_size'
     MaxRun                          = 'max_run'
-    Subnets                         = 'subnets'
-    SecurityGroupIds                = 'security_group_ids'
+    VpcConfig                       = 'vpc_config'
+    # Subnets                         = 'subnets'
+    # SecurityGroupIds                = 'security_group_ids'
     ModelUri                        = 'model_uri'
     ModelChannelName                = 'model_channel_name'
     MetricDefinitions               = 'metric_definitions'
@@ -101,7 +102,6 @@ class Field(Enum):
     # Model Step
     ModelData                       = 'model_data'
     Name                            = 'name'
-    VpcConfig                       = 'vpc_config'
     ImageConfig                     = 'image_config'
 
     # TuningStep: Tuner

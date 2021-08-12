@@ -229,6 +229,10 @@ def test_training_step_creation(pca_estimator):
         },
         output_data_config_path='s3://sagemaker-us-east-1-111111111111',
         tags=DEFAULT_TAGS,
+        vpc_config={
+            'Subnets': ['11111'],
+            'SecurityGroupIds': ['sg-11111111']
+        }
     )
     assert step.to_dict() == {
         'Type': 'Task',
@@ -262,7 +266,11 @@ def test_training_step_creation(pca_estimator):
                 'TrialComponentDisplayName': 'Training'
             },
             'TrainingJobName': 'TrainingJob',
-            'Tags': DEFAULT_TAGS_LIST
+            'Tags': DEFAULT_TAGS_LIST,
+            'VpcConfig': {
+                'SecurityGroupIds': ['sg-11111111'],
+                'Subnets': ['11111']
+            }
         },
         'Resource': 'arn:aws:states:::sagemaker:createTrainingJob.sync',
         'End': True
@@ -281,8 +289,7 @@ def test_training_step_creation_with_placeholders(pca_estimator):
         Field.VolumeKMSKey.value: str,
         Field.MaxRun.value: int,
         Field.OutputKMSKey.value: str,
-        Field.Subnets.value: [str],
-        Field.SecurityGroupIds.value: [str],
+        Field.VpcConfig.value: str,
         # Field.ModelUri.value: str,
         Field.Data.value: str,
         # Field.ModelChannelName.value: str,
@@ -319,6 +326,7 @@ def test_training_step_creation_with_placeholders(pca_estimator):
         volume_kms_key=execution_input[Field.VolumeKMSKey.value],
         max_run=execution_input[Field.MaxRun.value],
         output_kms_key=execution_input[Field.OutputKMSKey.value],
+        vpc_config=execution_input[Field.VpcConfig.value],
         # subnets=execution_input[Field.Subnets.value],
         # security_group_ids=execution_input[Field.Subnets.value],
         metric_definitions=execution_input[Field.MetricDefinitions.value],
@@ -386,6 +394,7 @@ def test_training_step_creation_with_placeholders(pca_estimator):
             'EnableManagedSpotTraining.$': "$$.Execution.Input['use_spot_instances']",
             'EnableNetworkIsolation.$': "$$.Execution.Input['enable_network_isolation']",
             'Environment.$': "$$.Execution.Input['environment']",
+            'VpcConfig.$': "$$.Execution.Input['vpc_config']"
         },
         'Resource': 'arn:aws:states:::sagemaker:createTrainingJob.sync',
         'End': True
