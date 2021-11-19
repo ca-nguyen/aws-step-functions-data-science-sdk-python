@@ -79,6 +79,7 @@ def create_workflow_and_check_definition(workflow_graph, workflow_name, sfn_clie
 
     return workflow
 
+
 def test_training_step(pca_estimator_fixture, record_set_fixture, sfn_client, sfn_role_arn):
     # Build workflow definition
     job_name = generate_job_name()
@@ -164,6 +165,44 @@ def test_training_step_with_placeholders(pca_estimator_fixture, record_set_fixtu
         # Cleanup
         state_machine_delete_wait(sfn_client, workflow.state_machine_arn)
 
+
+def test_training_step_with_framework_estimator(torch_estimator, input_data, sfn_client, sfn_role_arn):
+    execution_input = ExecutionInput(schema={
+        'JobName': str
+    })
+    # Build workflow definition
+    training_step = TrainingStep('Training Step with Framework estimator',
+                                 estimator=torch_estimator,
+                                 data=input_data,
+                                 mini_batch_size=200,
+                                 job_name=execution_input['JobName']  #unique_name_from_base("TrainingWithFrameworkEstimator")
+                                 )
+    training_step.add_retry(SAGEMAKER_RETRY_STRATEGY)
+    workflow_graph = Chain([training_step])
+
+    with timeout(minutes=DEFAULT_TIMEOUT_MINUTES):
+        # Create workflow and check definition
+        workflow = create_workflow_and_check_definition(
+            workflow_graph=workflow_graph,
+            workflow_name=unique_name_from_base("integ-test-training-step-with-framework-estimator-workflow"),
+            sfn_client=sfn_client,
+            sfn_role_arn=sfn_role_arn
+        )
+
+        inputs = {
+            'JobName': unique_name_from_base("TrainingWithFrameworkEstimator")
+        }
+
+        # Execute workflow
+        execution = workflow.execute(inputs=inputs)
+        execution_output = execution.get_output(wait=True)
+
+        # Check workflow output
+        assert execution_output.get("TrainingJobStatus") == "Completed"
+
+        # Cleanup
+        state_machine_delete_wait(sfn_client, workflow.state_machine_arn)
+        # End of Cleanup
 
 def test_model_step(trained_estimator, sfn_client, sagemaker_session, sfn_role_arn):
     # Build workflow definition

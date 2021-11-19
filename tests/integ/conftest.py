@@ -20,6 +20,7 @@ import os
 import pickle
 from sagemaker import Session
 from sagemaker.amazon import pca
+from sagemaker.pytorch import PyTorch
 from sagemaker.sklearn.processing import SKLearnProcessor
 from stepfunctions.steps.utils import get_aws_partition
 from tests.integ import DATA_DIR
@@ -86,3 +87,32 @@ def train_set():
 def record_set_fixture(pca_estimator_fixture, train_set):
     record_set = pca_estimator_fixture.record_set(train=train_set[0][:100])
     return record_set
+
+
+@pytest.fixture(scope="session")
+def torch_estimator(sagemaker_role_arn, sagemaker_session):
+    script_path = os.path.join(DATA_DIR, "pytorch_mnist", "mnist.py")
+    return PyTorch(
+        py_version='py3',
+        entry_point=script_path,
+        role=sagemaker_role_arn,
+        framework_version='1.2.0',
+        instance_count=1,
+        instance_type='ml.m5.large',
+        hyperparameters={
+            'epochs': 6,
+            'backend': 'gloo'
+        },
+        code_location=f"s3://{sagemaker_session.default_bucket()}/model"
+    )
+
+
+@pytest.fixture(scope="session")
+def input_data(sagemaker_session):
+    # upload input data
+    data_path = os.path.join(DATA_DIR, "pytorch_mnist")
+    return sagemaker_session.upload_data(
+        path=data_path,
+        bucket=sagemaker_session.default_bucket(),
+        key_prefix='integ-test-data/torch_mnist/train',
+    )
